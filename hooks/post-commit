@@ -1,0 +1,18 @@
+#!/bin/sh
+# Simple post-commit hook that pushes the current branch to origin.
+# Install this file to .git/hooks/post-commit (installation script provided).
+
+set -e
+
+# Determine current branch
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+echo "Auto-push: pushing branch '$branch' to 'origin'..."
+
+# Try to push and show friendly message on failure
+if git push origin "$branch"; then
+  echo "Auto-push: pushed $branch to origin"
+else
+  echo "Auto-push: push failed. You may need to resolve conflicts and push manually."
+  exit 1
+fi
