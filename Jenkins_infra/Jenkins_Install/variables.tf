@@ -13,10 +13,6 @@ variable "key_name" {
   description = "Existing EC2 key pair name"
 }
 
-variable "admin_cidr" {
-  type        = string
-  description = "Your public IP in CIDR format, for example 203.0.113.10/32"
-}
 
 variable "root_volume_size" {
   type    = number
