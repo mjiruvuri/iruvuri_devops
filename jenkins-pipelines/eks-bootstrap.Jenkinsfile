@@ -159,19 +159,25 @@ pipeline {
                       --region ${AWS_REGION} \
                       --access-config authenticationMode=API_AND_CONFIG_MAP 2>/dev/null || true
 
-                    sleep 20
+                    echo "Waiting for auth mode update to complete..."
+                    for i in \$(seq 1 24); do
+                        STATUS=\$(aws eks describe-cluster --name ${CLUSTER_NAME} --region ${AWS_REGION} --query 'cluster.status' --output text)
+                        if [ "\$STATUS" = "ACTIVE" ]; then break; fi
+                        echo "Cluster status: \$STATUS — retrying in 10s..."
+                        sleep 10
+                    done
 
                     aws eks create-access-entry \
                       --cluster-name ${CLUSTER_NAME} \
                       --principal-arn \$USER_ARN \
-                      --region ${AWS_REGION} 2>/dev/null || true
+                      --region ${AWS_REGION} || true
 
                     aws eks associate-access-policy \
                       --cluster-name ${CLUSTER_NAME} \
                       --principal-arn \$USER_ARN \
                       --policy-arn arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy \
                       --access-scope type=cluster \
-                      --region ${AWS_REGION} 2>/dev/null || true
+                      --region ${AWS_REGION}
 
                     echo "Access granted to \$USER_ARN"
                 """
