@@ -50,7 +50,7 @@ pipeline {
             steps {
                 script {
                     def jenkinsSgId = sh(
-                        script: "cd jenkins && terraform output -raw security_group_id",
+                        script: "cd jenkins && terraform init -reconfigure && terraform output -raw security_group_id",
                         returnStdout: true
                     ).trim()
                     dir(TF_DIR) {
@@ -70,7 +70,7 @@ pipeline {
             steps {
                 script {
                     def jenkinsSgId = sh(
-                        script: "cd jenkins && terraform output -raw security_group_id",
+                        script: "cd jenkins && terraform init -reconfigure && terraform output -raw security_group_id",
                         returnStdout: true
                     ).trim()
                     dir(TF_DIR) {
