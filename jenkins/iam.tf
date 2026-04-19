@@ -99,6 +99,7 @@ data "aws_iam_policy_document" "jenkins_permissions" {
       "iam:AddRoleToInstanceProfile",
       "iam:RemoveRoleFromInstanceProfile",
       "iam:GetInstanceProfile",
+      "iam:ListInstanceProfilesForRole",
       "iam:CreateOpenIDConnectProvider",
       "iam:DeleteOpenIDConnectProvider",
       "iam:GetOpenIDConnectProvider",

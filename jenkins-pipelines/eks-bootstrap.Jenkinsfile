@@ -86,6 +86,16 @@ pipeline {
             when { expression { params.ACTION == 'apply' } }
             steps {
                 sh '''
+                    echo "Waiting for EKS API server to accept connections..."
+                    for i in $(seq 1 30); do
+                        if kubectl cluster-info > /dev/null 2>&1; then
+                            echo "API server is reachable"
+                            break
+                        fi
+                        echo "Attempt $i/30 — not ready yet, retrying in 15s..."
+                        sleep 15
+                    done
+
                     echo "Waiting for EKS nodes to be Ready..."
                     kubectl wait --for=condition=Ready nodes \
                       --all --timeout=300s
