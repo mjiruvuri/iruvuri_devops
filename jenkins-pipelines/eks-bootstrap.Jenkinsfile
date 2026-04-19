@@ -142,7 +142,6 @@ pipeline {
                     kubectl apply -f k8s/argocd/app-of-apps.yaml
                     kubectl apply -f k8s/apps/prometheus-grafana.yaml
                     kubectl apply -f k8s/apps/loki.yaml
-                    kubectl apply -f k8s/apps/loki-datasource.yaml
                 '''
             }
         }
