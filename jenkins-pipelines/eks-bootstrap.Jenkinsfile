@@ -50,7 +50,7 @@ pipeline {
             steps {
                 script {
                     def jenkinsSgId = sh(
-                        script: "cd jenkins && terraform init -reconfigure && terraform output -raw security_group_id",
+                        script: "aws ec2 describe-security-groups --region ${AWS_REGION} --filters Name=group-name,Values=jenkins-sg --query 'SecurityGroups[0].GroupId' --output text",
                         returnStdout: true
                     ).trim()
                     dir(TF_DIR) {
@@ -70,7 +70,7 @@ pipeline {
             steps {
                 script {
                     def jenkinsSgId = sh(
-                        script: "cd jenkins && terraform init -reconfigure && terraform output -raw security_group_id",
+                        script: "aws ec2 describe-security-groups --region ${AWS_REGION} --filters Name=group-name,Values=jenkins-sg --query 'SecurityGroups[0].GroupId' --output text",
                         returnStdout: true
                     ).trim()
                     dir(TF_DIR) {
