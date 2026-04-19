@@ -1,0 +1,7 @@
+aws_region          = "us-east-1"
+cluster_name        = "eks-lab"
+kubernetes_version  = "1.32"
+node_instance_types = ["t3.medium", "t3.large", "t3a.medium"]
+node_desired        = 2
+node_min            = 1
+node_max            = 3
