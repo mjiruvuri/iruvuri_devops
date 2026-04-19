@@ -4,16 +4,6 @@ set -euo pipefail
 apt-get update -y
 apt-get install -y ca-certificates curl gnupg unzip
 
-# Java
-apt-get install -y openjdk-17-jdk
-
-# Jenkins — fetch exact signing key from Ubuntu keyserver by key ID
-gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 7198F4B714ABFC68
-gpg --export 7198F4B714ABFC68 | tee /usr/share/keyrings/jenkins-keyring.gpg > /dev/null
-echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.gpg] https://pkg.jenkins.io/debian-stable binary/" | tee /etc/apt/sources.list.d/jenkins.list > /dev/null
-apt-get update -y
-apt-get install -y jenkins
-
 # Docker
 install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
@@ -21,7 +11,17 @@ chmod a+r /etc/apt/keyrings/docker.gpg
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 apt-get update -y
 apt-get install -y docker-ce docker-ce-cli containerd.io
-usermod -aG docker jenkins
+
+# Jenkins via Docker (avoids expired apt repo GPG key issue)
+docker volume create jenkins_home
+docker run -d \
+  --name jenkins \
+  --restart unless-stopped \
+  -p 8080:8080 \
+  -p 50000:50000 \
+  -v jenkins_home:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  jenkins/jenkins:lts-jdk17
 
 # Terraform
 TERRAFORM_VERSION="1.9.5"
@@ -38,6 +38,3 @@ curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/aw
 unzip /tmp/awscliv2.zip -d /tmp
 /tmp/aws/install
 rm -rf /tmp/awscliv2.zip /tmp/aws
-
-systemctl enable jenkins
-systemctl start jenkins
