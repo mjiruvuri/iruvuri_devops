@@ -167,10 +167,17 @@ pipeline {
                         sleep 10
                     done
 
+                    echo "Removing stale access entry if exists..."
+                    aws eks delete-access-entry \
+                      --cluster-name ${CLUSTER_NAME} \
+                      --principal-arn \$USER_ARN \
+                      --region ${AWS_REGION} 2>/dev/null || true
+
+                    echo "Creating fresh access entry..."
                     aws eks create-access-entry \
                       --cluster-name ${CLUSTER_NAME} \
                       --principal-arn \$USER_ARN \
-                      --region ${AWS_REGION} || true
+                      --region ${AWS_REGION}
 
                     aws eks associate-access-policy \
                       --cluster-name ${CLUSTER_NAME} \
@@ -180,6 +187,7 @@ pipeline {
                       --region ${AWS_REGION}
 
                     echo "Access granted to \$USER_ARN"
+                    echo "Run locally: aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}"
                 """
             }
         }
