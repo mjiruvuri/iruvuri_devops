@@ -48,12 +48,19 @@ pipeline {
         stage('Terraform Apply') {
             when { expression { params.ACTION == 'apply' } }
             steps {
-                dir(TF_DIR) {
-                    sh """
-                        terraform apply -auto-approve \
-                          -var="aws_region=${AWS_REGION}" \
-                          -var="cluster_name=${CLUSTER_NAME}"
-                    """
+                script {
+                    def jenkinsSgId = sh(
+                        script: "cd jenkins && terraform output -raw security_group_id",
+                        returnStdout: true
+                    ).trim()
+                    dir(TF_DIR) {
+                        sh """
+                            terraform apply -auto-approve \
+                              -var="aws_region=${AWS_REGION}" \
+                              -var="cluster_name=${CLUSTER_NAME}" \
+                              -var="jenkins_sg_id=${jenkinsSgId}"
+                        """
+                    }
                 }
             }
         }
@@ -61,12 +68,19 @@ pipeline {
         stage('Terraform Destroy') {
             when { expression { params.ACTION == 'destroy' } }
             steps {
-                dir(TF_DIR) {
-                    sh """
-                        terraform destroy -auto-approve \
-                          -var="aws_region=${AWS_REGION}" \
-                          -var="cluster_name=${CLUSTER_NAME}"
-                    """
+                script {
+                    def jenkinsSgId = sh(
+                        script: "cd jenkins && terraform output -raw security_group_id",
+                        returnStdout: true
+                    ).trim()
+                    dir(TF_DIR) {
+                        sh """
+                            terraform destroy -auto-approve \
+                              -var="aws_region=${AWS_REGION}" \
+                              -var="cluster_name=${CLUSTER_NAME}" \
+                              -var="jenkins_sg_id=${jenkinsSgId}"
+                        """
+                    }
                 }
             }
         }

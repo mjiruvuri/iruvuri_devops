@@ -17,3 +17,8 @@ output "iam_role_arn" {
   description = "ARN of the Jenkins IAM role"
   value       = aws_iam_role.jenkins.arn
 }
+
+output "security_group_id" {
+  description = "Jenkins EC2 security group ID"
+  value       = aws_security_group.jenkins.id
+}

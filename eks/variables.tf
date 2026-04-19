@@ -38,3 +38,9 @@ variable "node_max" {
   type        = number
   default     = 3
 }
+
+variable "jenkins_sg_id" {
+  description = "Jenkins EC2 security group ID — allowed to reach EKS API on port 443"
+  type        = string
+  default     = ""
+}
