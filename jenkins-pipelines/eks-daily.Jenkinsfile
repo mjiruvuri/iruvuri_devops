@@ -39,7 +39,11 @@ pipeline {
             when { expression { params.ACTION == 'apply' } }
             steps {
                 dir(TF_DIR) {
-                    sh 'terraform apply -auto-approve'
+                    sh """
+                        terraform apply -auto-approve \
+                          -var="aws_region=${AWS_REGION}" \
+                          -var="cluster_name=${CLUSTER_NAME}"
+                    """
                 }
             }
             post {
@@ -57,7 +61,11 @@ pipeline {
             when { expression { params.ACTION == 'destroy' } }
             steps {
                 dir(TF_DIR) {
-                    sh 'terraform destroy -auto-approve'
+                    sh """
+                        terraform destroy -auto-approve \
+                          -var="aws_region=${AWS_REGION}" \
+                          -var="cluster_name=${CLUSTER_NAME}"
+                    """
                 }
             }
         }
