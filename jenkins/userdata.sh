@@ -7,9 +7,10 @@ apt-get install -y ca-certificates curl gnupg unzip
 # Java
 apt-get install -y openjdk-17-jdk
 
-# Jenkins — download key directly (avoids pipe/dearmor issues)
-curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key -o /usr/share/keyrings/jenkins-keyring.asc
-echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" | tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+# Jenkins — fetch exact signing key from Ubuntu keyserver by key ID
+gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 7198F4B714ABFC68
+gpg --export 7198F4B714ABFC68 | tee /usr/share/keyrings/jenkins-keyring.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.gpg] https://pkg.jenkins.io/debian-stable binary/" | tee /etc/apt/sources.list.d/jenkins.list > /dev/null
 apt-get update -y
 apt-get install -y jenkins
 
