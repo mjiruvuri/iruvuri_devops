@@ -15,9 +15,6 @@ spec:
           enabled: true
           persistence:
             enabled: false
-          config:
-            retention_period: 24h
-
         promtail:
           enabled: true
           config:
