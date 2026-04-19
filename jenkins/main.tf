@@ -60,7 +60,8 @@ resource "aws_instance" "jenkins" {
     delete_on_termination = true
   }
 
-  user_data = file("${path.module}/userdata.sh")
+  user_data                   = file("${path.module}/userdata.sh")
+  user_data_replace_on_change = true
 
   tags = {
     Name = "jenkins"
