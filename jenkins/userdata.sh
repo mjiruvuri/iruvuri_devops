@@ -12,16 +12,41 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.
 apt-get update -y
 apt-get install -y docker-ce docker-ce-cli containerd.io
 
+# Mount persistent EBS volume for Jenkins data
+# Newer instance types expose EBS as NVMe; wait for the device to appear
+MOUNT_POINT="/mnt/jenkins-data"
+DATA_DEVICE=""
+for dev in /dev/nvme1n1 /dev/xvdf; do
+  if [ -b "$dev" ]; then DATA_DEVICE="$dev"; break; fi
+done
+if [ -z "$DATA_DEVICE" ]; then
+  echo "ERROR: data EBS device not found" >&2; exit 1
+fi
+mkdir -p "$MOUNT_POINT"
+# Format only if no filesystem exists (preserves data on reattach)
+if ! blkid "$DATA_DEVICE" | grep -q ext4; then
+  mkfs.ext4 "$DATA_DEVICE"
+fi
+mount "$DATA_DEVICE" "$MOUNT_POINT"
+echo "$DATA_DEVICE $MOUNT_POINT ext4 defaults,nofail 0 2" >> /etc/fstab
+chown -R 1000:1000 "$MOUNT_POINT"
+
 # Jenkins via Docker (avoids expired apt repo GPG key issue)
-docker volume create jenkins_home
 docker run -d \
   --name jenkins \
   --restart unless-stopped \
   -p 8080:8080 \
   -p 50000:50000 \
-  -v jenkins_home:/var/jenkins_home \
+  -v "$MOUNT_POINT":/var/jenkins_home \
   -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /usr/local/bin/terraform:/usr/local/bin/terraform \
+  -v /usr/local/bin/kubectl:/usr/local/bin/kubectl \
+  -v /usr/local/aws-cli:/usr/local/aws-cli \
   jenkins/jenkins:lts-jdk17
+
+# Symlink aws CLI inside container (runs as root)
+sleep 5
+docker exec -u root jenkins ln -sf /usr/local/aws-cli/v2/current/bin/aws /usr/local/bin/aws
 
 # Terraform
 TERRAFORM_VERSION="1.9.5"

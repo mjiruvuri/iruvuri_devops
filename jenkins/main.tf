@@ -38,6 +38,27 @@ resource "aws_security_group" "jenkins" {
   }
 }
 
+resource "aws_ebs_volume" "jenkins_data" {
+  availability_zone = var.jenkins_data_volume_az
+  size              = var.jenkins_data_volume_size_gb
+  type              = "gp3"
+
+  tags = {
+    Name = "jenkins-data"
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "aws_volume_attachment" "jenkins_data" {
+  device_name  = "/dev/xvdf"
+  volume_id    = aws_ebs_volume.jenkins_data.id
+  instance_id  = aws_instance.jenkins.id
+  force_detach = true
+}
+
 resource "aws_instance" "jenkins" {
   ami                    = var.ami_id
   instance_type          = var.instance_type
@@ -45,14 +66,6 @@ resource "aws_instance" "jenkins" {
   vpc_security_group_ids = [aws_security_group.jenkins.id]
   iam_instance_profile   = aws_iam_instance_profile.jenkins.name
   key_name               = var.key_name
-
-  instance_market_options {
-    market_type = "spot"
-    spot_options {
-      max_price                      = var.spot_max_price != "" ? var.spot_max_price : null
-      instance_interruption_behavior = "terminate"
-    }
-  }
 
   root_block_device {
     volume_size           = var.root_volume_size_gb

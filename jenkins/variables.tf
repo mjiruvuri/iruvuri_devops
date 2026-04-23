@@ -47,3 +47,14 @@ variable "root_volume_size_gb" {
   type        = number
   default     = 20
 }
+
+variable "jenkins_data_volume_size_gb" {
+  description = "Persistent EBS volume size in GB for Jenkins data (survives spot termination)"
+  type        = number
+  default     = 30
+}
+
+variable "jenkins_data_volume_az" {
+  description = "AZ for the persistent Jenkins data EBS volume — must match the EC2 instance AZ"
+  type        = string
+}

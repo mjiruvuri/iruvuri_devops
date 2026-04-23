@@ -153,19 +153,6 @@ pipeline {
                     ACCOUNT_ID=\$(aws sts get-caller-identity --query Account --output text)
                     USER_ARN="arn:aws:iam::\${ACCOUNT_ID}:user/iruvuri-tf-user"
 
-                    aws eks update-cluster-config \
-                      --name ${CLUSTER_NAME} \
-                      --region ${AWS_REGION} \
-                      --access-config authenticationMode=API_AND_CONFIG_MAP 2>/dev/null || true
-
-                    echo "Waiting for auth mode update to complete..."
-                    for i in \$(seq 1 24); do
-                        STATUS=\$(aws eks describe-cluster --name ${CLUSTER_NAME} --region ${AWS_REGION} --query 'cluster.status' --output text)
-                        if [ "\$STATUS" = "ACTIVE" ]; then break; fi
-                        echo "Cluster status: \$STATUS — retrying in 10s..."
-                        sleep 10
-                    done
-
                     echo "Removing stale access entry if exists..."
                     aws eks delete-access-entry \
                       --cluster-name ${CLUSTER_NAME} \
