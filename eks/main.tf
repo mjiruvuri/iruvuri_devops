@@ -55,6 +55,24 @@ resource "aws_eks_node_group" "spot" {
   ]
 }
 
+data "aws_caller_identity" "current" {}
+
+resource "aws_eks_access_entry" "jenkins" {
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/jenkins-ec2-role"
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "jenkins" {
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = aws_eks_access_entry.jenkins.principal_arn
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  access_scope {
+    type = "cluster"
+  }
+  depends_on = [aws_eks_access_entry.jenkins]
+}
+
 resource "aws_security_group_rule" "jenkins_to_eks_api" {
   count                    = var.jenkins_sg_id != "" ? 1 : 0
   type                     = "ingress"
