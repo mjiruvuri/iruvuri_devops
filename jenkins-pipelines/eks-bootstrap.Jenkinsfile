@@ -69,14 +69,16 @@ pipeline {
             when { expression { params.ACTION == 'destroy' } }
             steps {
                 sh '''
-                    echo "Deleting all LoadBalancer services to avoid orphaned ELBs..."
+                    echo "Deleting namespaces to prevent ELB recreation during destroy..."
                     aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
-                    kubectl delete svc --all-namespaces -l "app.kubernetes.io/managed-by" --field-selector spec.type=LoadBalancer --ignore-not-found || true
+                    # Delete entire namespaces — this stops ArgoCD/Grafana from recreating LB services
+                    kubectl delete namespace argocd monitoring logging --ignore-not-found || true
+                    # Also catch any remaining LoadBalancer services in other namespaces
                     kubectl get svc -A --field-selector spec.type=LoadBalancer -o json | \
-                      jq -r '.items[] | "\\(.metadata.namespace) \\(.metadata.name)"' | \
+                      jq -r '.items[] | "\(.metadata.namespace) \(.metadata.name)"' | \
                       while read ns svc; do kubectl delete svc "$svc" -n "$ns" --ignore-not-found; done || true
-                    echo "Waiting 30s for ELBs to deregister..."
-                    sleep 30
+                    echo "Waiting 60s for ELBs to fully deregister..."
+                    sleep 60
                 '''
             }
         }
