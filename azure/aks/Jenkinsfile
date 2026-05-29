@@ -74,17 +74,9 @@ node_count          = 1
             steps {
                 dir("${TF_DIR}") {
                     sh '''
-                        az login --service-principal \
-                          -u $ARM_CLIENT_ID \
-                          -p $ARM_CLIENT_SECRET \
-                          --tenant $ARM_TENANT_ID
-
-                        az aks get-credentials \
-                          --resource-group rg-aks-lab \
-                          --name aks-lab \
-                          --overwrite-existing
-
-                        kubectl get nodes
+                        terraform output -raw kube_config > kubeconfig.yaml
+                        KUBECONFIG=kubeconfig.yaml kubectl get nodes
+                        rm kubeconfig.yaml
                     '''
                 }
             }
