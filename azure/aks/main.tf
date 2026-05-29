@@ -27,15 +27,9 @@ resource "azurerm_kubernetes_cluster" "aks" {
   sku_tier = "Free"
 
   default_node_pool {
-    name       = "default"
-    node_count = var.node_count
-    vm_size    = var.node_vm_size
-
-    # Spot instances — up to 90% cheaper, fine for a lab
-    priority        = "Spot"
-    eviction_policy = "Delete"
-    spot_max_price  = -1
-
+    name            = "default"
+    node_count      = var.node_count
+    vm_size         = var.node_vm_size
     os_disk_size_gb = 30
   }
 
@@ -50,6 +44,4 @@ resource "azurerm_kubernetes_cluster" "aks" {
     load_balancer_sku = "standard"
   }
 
-  # No Azure Monitor — we'll run self-hosted Prometheus/Grafana
-  monitor_metrics {}
 }
