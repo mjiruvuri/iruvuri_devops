@@ -1,0 +1,86 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(
+            name: 'ACTION',
+            choices: ['apply', 'destroy'],
+            description: 'Apply creates the AKS cluster. Destroy tears it down.'
+        )
+    }
+
+    environment {
+        ARM_CLIENT_ID       = credentials('azure-client-id')
+        ARM_CLIENT_SECRET   = credentials('azure-client-secret')
+        ARM_TENANT_ID       = credentials('azure-tenant-id')
+        ARM_SUBSCRIPTION_ID = credentials('azure-subscription-id')
+        TF_DIR              = 'azure/aks'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh 'terraform init -reconfigure'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh """
+                        if [ "${params.ACTION}" = "destroy" ]; then
+                            terraform plan -destroy -out=tfplan
+                        else
+                            terraform plan -out=tfplan
+                        fi
+                    """
+                }
+            }
+        }
+
+        stage('Apply / Destroy') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh 'terraform apply -auto-approve tfplan'
+                }
+            }
+        }
+
+        stage('Get Kubeconfig') {
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+            steps {
+                dir("${TF_DIR}") {
+                    sh '''
+                        az login --service-principal \
+                          -u $ARM_CLIENT_ID \
+                          -p $ARM_CLIENT_SECRET \
+                          --tenant $ARM_TENANT_ID
+
+                        az aks get-credentials \
+                          --resource-group rg-aks-lab \
+                          --name aks-lab \
+                          --overwrite-existing
+
+                        kubectl get nodes
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}

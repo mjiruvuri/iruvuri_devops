@@ -1,0 +1,5 @@
+location            = "eastus2"
+resource_group_name = "rg-aks-lab"
+cluster_name        = "aks-lab"
+node_vm_size        = "Standard_B2s"
+node_count          = 1
