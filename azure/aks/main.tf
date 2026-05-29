@@ -24,8 +24,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
   dns_prefix          = var.cluster_name
   kubernetes_version  = var.kubernetes_version
 
-  # Free tier = no control plane fee
-  sku_tier = "Free"
+  sku_tier            = "Free"
+  oidc_issuer_enabled = true
 
   default_node_pool {
     name            = "default"
